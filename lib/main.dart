@@ -1,7 +1,9 @@
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 
-void main() => runApp(XylophoneApp());
+void main() => runApp(
+      XylophoneApp(),
+    );
 
 class XylophoneApp extends StatelessWidget {
   XylophoneApp({super.key});
@@ -17,7 +19,9 @@ class XylophoneApp extends StatelessWidget {
   ];
   void playSound(int soundNumber) {
     final player = AudioPlayer();
-    player.play(AssetSource('audio/note$soundNumber.wav'));
+    player.play(
+      AssetSource('audio/note$soundNumber.wav'),
+    );
   }
 
   Widget createKey({required Color color, required int soundNumber}) {
@@ -33,8 +37,8 @@ class XylophoneApp extends StatelessWidget {
               Radius.circular(16),
             ),
           ),
-          margin:
-              EdgeInsets.symmetric(horizontal: 3.0 * soundNumber, vertical: 6.0),
+          margin: EdgeInsets.symmetric(
+              horizontal: 3.0 * soundNumber, vertical: 6.0),
           child: const Padding(
             padding: EdgeInsets.symmetric(horizontal: 8.0),
             child: Row(
@@ -59,7 +63,9 @@ class XylophoneApp extends StatelessWidget {
   List<Widget> buildButtons() {
     List<Widget> buttonsList = [];
     for (int i = 0; i < colorsList.length; i++) {
-      buttonsList.add(createKey(color: colorsList[i], soundNumber: i));
+      buttonsList.add(
+        createKey(color: colorsList[i], soundNumber: i),
+      );
     }
     return buttonsList;
   }
@@ -74,11 +80,16 @@ class XylophoneApp extends StatelessWidget {
             gradient: LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
-              colors: [Colors.grey,Colors.blueGrey, Colors.white,],
+              colors: [
+                Colors.grey,
+                Colors.blueGrey,
+                Colors.white,
+              ],
               tileMode: TileMode.repeated,
             ),
           ),
-          padding: EdgeInsets.symmetric(vertical: MediaQuery.of(context).padding.top,horizontal: 6),
+          padding: EdgeInsets.symmetric(
+              vertical: MediaQuery.of(context).padding.top, horizontal: 6),
           child: Column(
             mainAxisSize: MainAxisSize.max,
             children: buildButtons(),
