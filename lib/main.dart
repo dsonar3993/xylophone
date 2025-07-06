@@ -1,13 +1,21 @@
-import 'package:audioplayers/audioplayers.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:audioplayers/audioplayers.dart';
 
-void main() => runApp(
-      XylophoneApp(),
-    );
+void main() {
+  runApp(const XylophoneApp());
+}
 
-class XylophoneApp extends StatelessWidget {
-  XylophoneApp({super.key});
+class XylophoneApp extends StatefulWidget {
+  const XylophoneApp({super.key});
 
+  @override
+  State<XylophoneApp> createState() => _XylophoneAppState();
+}
+
+class _XylophoneAppState extends State<XylophoneApp>
+    with WidgetsBindingObserver {
+  late final AudioPlayer _player;
   final List<Color> colorsList = [
     Colors.red,
     Colors.orange,
@@ -17,42 +25,75 @@ class XylophoneApp extends StatelessWidget {
     Colors.blue,
     Colors.purple
   ];
-  void playSound(int soundNumber) {
-    final player = AudioPlayer();
-    player.play(
-      AssetSource('audio/note$soundNumber.wav'),
-    );
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    _player = AudioPlayer()..setPlayerMode(PlayerMode.lowLatency);
   }
 
-  Widget createKey({required Color color, required int soundNumber}) {
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    _player.dispose();
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.paused ||
+        state == AppLifecycleState.inactive) {
+      _player.stop(); // or pause if you want to resume later
+    } else if (state == AppLifecycleState.resumed) {
+      // Reinitialize if needed
+      _player.setPlayerMode(PlayerMode.lowLatency);
+    }
+  }
+
+  void playSound(int soundNumber) async {
+    await _player.stop(); // Ensures clean playback
+    await _player.play(AssetSource('audio/note$soundNumber.wav'));
+  }
+
+  Expanded buildKey({required Color color, required int soundNumber}) {
     return Expanded(
-      child: InkWell(
-        onTap: () {
-          playSound(soundNumber);
-        },
-        child: Container(
-          decoration: BoxDecoration(
-            color: color,
-            borderRadius: const BorderRadius.all(
-              Radius.circular(16),
+      child: Padding(
+        padding:
+            EdgeInsets.symmetric(vertical: 8.0, horizontal: soundNumber / 0.25),
+        child: RawGestureDetector(
+          gestures: {
+            TapGestureRecognizer:
+                GestureRecognizerFactoryWithHandlers<TapGestureRecognizer>(
+              () => TapGestureRecognizer(),
+              (TapGestureRecognizer instance) {
+                instance.onTap = () {
+                  playSound(soundNumber);
+                };
+              },
+            )
+          },
+          behavior: HitTestBehavior.opaque,
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              color: color,
+              shape: BoxShape.rectangle,
+              borderRadius: BorderRadius.circular(26),
             ),
-          ),
-          margin: EdgeInsets.symmetric(
-              horizontal: 3.0 * soundNumber, vertical: 6.0),
-          child: const Padding(
-            padding: EdgeInsets.symmetric(horizontal: 8.0),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Icon(
-                  Icons.block,
-                  color: Colors.white,
-                ),
-                Icon(
-                  Icons.block,
-                  color: Colors.white,
-                ),
-              ],
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Icon(
+                    Icons.block,
+                    color: Colors.white,
+                  ),
+                  Icon(
+                    Icons.block,
+                    color: Colors.white,
+                  )
+                ],
+              ),
             ),
           ),
         ),
@@ -60,39 +101,21 @@ class XylophoneApp extends StatelessWidget {
     );
   }
 
-  List<Widget> buildButtons() {
-    List<Widget> buttonsList = [];
-    for (int i = 0; i < colorsList.length; i++) {
-      buttonsList.add(
-        createKey(color: colorsList[i], soundNumber: i),
-      );
-    }
-    return buttonsList;
-  }
-
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       home: Scaffold(
-        body: Container(
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                Colors.grey,
-                Colors.blueGrey,
-                Colors.white,
-              ],
-              tileMode: TileMode.repeated,
-            ),
-          ),
-          padding: EdgeInsets.symmetric(
-              vertical: MediaQuery.of(context).padding.top, horizontal: 6),
+        backgroundColor: Colors.black,
+        body: SafeArea(
+          minimum: EdgeInsets.all(16),
           child: Column(
-            mainAxisSize: MainAxisSize.max,
-            children: buildButtons(),
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: List.generate(
+              7,
+              (index) =>
+                  buildKey(color: colorsList[index], soundNumber: index + 1),
+            ),
           ),
         ),
       ),
